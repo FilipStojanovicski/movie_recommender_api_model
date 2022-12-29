@@ -8,14 +8,14 @@ app = Flask(__name__)
 db_username = 'filip'
 db_password = 'abc123'
 db_name = 'movie_recommender'
-db_url = 'localhost'
+db_url = '127.0.0.1'
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://{db_username}:{db_password}@{db_url}/{db_name}'
 db = SQLAlchemy(app)
 
 def read_all_data():
-    ratings = pd.read_sql(sql = "SELECT * FROM RATINGS", con=db.engine)
+    ratings = pd.read_sql(sql = "SELECT * FROM ratings", con=db.engine)
     ratings_by_user = pd.pivot_table(data = ratings, index = "userId", values="rating", columns="movieId")
-    movies = pd.read_sql(sql = "SELECT * FROM MOVIES", con=db.engine)
+    movies = pd.read_sql(sql = "SELECT * FROM movies", con=db.engine)
     genres = pd.read_sql(sql = "SELECT * FROM genres", con=db.engine)
     movies_genres = pd.read_sql(sql = "SELECT * FROM movies_genres", con=db.engine)
     return((ratings,ratings_by_user, movies, genres, movies_genres))
