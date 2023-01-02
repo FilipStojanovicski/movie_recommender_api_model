@@ -40,20 +40,18 @@ def handle_exception(e):
             "description": e.description,
         }
     })
-    print(response.status)
     response.content_type = "application/json"
     return response
 
 @app.route('/movie_recommendation/knn', methods = ['GET', 'POST'])
 def recommendMoviesKNN():
-    print(request.get_json())
     if(request.method=='POST'):
-        # try:
+        try:
 
             (ratings,ratings_by_user, movies, genres, movies_genres) = read_all_data()
 
             req = request.get_json()
-
+            
             movies_rated = [x['movieId'] for x in req['ratings']]
 
             min_support = req['model_params']['min_support']
@@ -63,18 +61,16 @@ def recommendMoviesKNN():
             input_ratings_matrix = model_knn.process_input(req['ratings'])
 
             # How many matching movies need to have been rated to be considered as a neighbor
+            # is the minimum of the min_support and the number of movies rated
             num_movies_rated = len(input_ratings_matrix)
             min_support = min(num_movies_rated, min_support)
 
-            print(min_support)
-
             most_similar_users = model_knn.get_nearest_neighbors(input_ratings_matrix, ratings_by_user, min_support, max_neighbours)
 
+            # If we can't find any neighbors then we return the most popular predictions
             if (most_similar_users is not None and (len(most_similar_users) > 0)):
-                print("has neighbors")
                 predicted_ratings = model_knn.ratings_predictions(most_similar_users, ratings_by_user, movies_rated)
             else: 
-                print("no neighbors")
                 predicted_ratings = model_knn.ratings_predictions_no_neighbors(ratings_by_user, movies_rated)    
 
             # Get the relative confidence score, the more total ratings, the more confident we can be in the score
@@ -97,15 +93,9 @@ def recommendMoviesKNN():
                 
             return(jsonify({"status": 200, "data": response}))
 
-        # except Exception as e:
-        #     print(e)
-        #     return(jsonify({"status": 400, "data": None}))
-    elif(request.method == 'GET'):
-        print("GET REQUEST")
-        data = {
-            "Error" : "GET Request not supported for /movie_recommendation"
-        }
-        return jsonify(data)
+        except Exception as e:
+            print(e)
+            return(jsonify({"status": 400, "data": None}))
         
   
 if __name__=='__main__':
@@ -113,11 +103,9 @@ if __name__=='__main__':
 
 @app.route('/movie_recommendation/svd', methods = ['GET', 'POST'])
 def recommendMoviesSVD():
-    print(request.get_json())
     if(request.method=='POST'):
 
-        # try:
-
+        try:
             (ratings, ratings_by_user, movies, genres, movies_genres) = read_all_data()
 
             req = request.get_json()
@@ -127,8 +115,6 @@ def recommendMoviesSVD():
             n_factors = req['model_params']['n_factors']
             n_epochs = req['model_params']['n_epochs']
             popularity_boost = req['model_params']['popularity_boost']
-
-            print(req['ratings'])
 
             if (len(movies_rated) > 0):
 
@@ -169,16 +155,9 @@ def recommendMoviesSVD():
                     
             return(jsonify({"status": 200, "data": response}))
         
-        # except Exception as e:
-        #     print(e)
-        #     return(jsonify({"status": 400, "data": None}))
-
-    elif(request.method == 'GET'):
-        print("GET REQUEST")
-        data = {
-            "Error" : "Invalid request"
-        }
-        return jsonify(data)
+        except Exception as e:
+            print(e)
+            return(jsonify({"status": 400, "data": None}))
         
   
 if __name__=='__main__':

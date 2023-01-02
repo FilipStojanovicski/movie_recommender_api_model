@@ -4,6 +4,7 @@ import pandas as pd
 def process_input(input_ratings):
     input_ratings = pd.DataFrame(input_ratings)
     
+    # Filter for only filled in ratings
     input_ratings = input_ratings[(input_ratings['movieId'].notnull()) & (input_ratings['rating'].notnull()) & \
                               (input_ratings['rating'] != 'not seen')]
     input_ratings['movieId'] = input_ratings['movieId'].astype(int)
@@ -15,12 +16,12 @@ def process_input(input_ratings):
 
 # Find most similar users
 def get_nearest_neighbors(input_ratings_matrix, ratings_by_user, min_support, max_neighbours):
+
+    # Get the difference in ratings
     ratings_diffs = (ratings_by_user - input_ratings_matrix)**2
     user_dists = ratings_diffs.sum(axis='columns', min_count = min_support)
     user_dists = user_dists.dropna()
 
-    print("Num of users with min support movies rated")
-    print(len(user_dists))
     if len(user_dists) == 0:
         return None
     user_sims = 1 / (1 + user_dists)
@@ -50,9 +51,6 @@ def ratings_predictions(most_similar_users, ratings_by_user, movies_rated):
                                 left_index = True, right_index = True)
     # Remove all movies that no one has rated
     similar_user_ratings = similar_user_ratings.dropna(axis = 1, how = 'all')
-
-    print("Similar User Ratings")
-    print(len(similar_user_ratings))
     
 
     movies_to_rate = [x for x in list(similar_user_ratings.columns)  if (x != 'similarity' and x not in movies_rated)]
@@ -73,9 +71,11 @@ def ratings_predictions(most_similar_users, ratings_by_user, movies_rated):
 
 def get_movie_by_genre(predicted_ratings, genres, movies_genres, max_recommendations = 20):
     
+    # Merge the genres onto the movie ratings
     predictions_genres = predicted_ratings.merge(movies_genres, left_index = True, right_on = 'movieId')
     predictions_genres = predictions_genres.sort_values(by = ['genreId', 'adjusted_rating'], ascending=False)
 
+    # Return only the top rated movies for each genre
     top100_predictions_genres = predictions_genres.groupby('genreId').head(max_recommendations)
     top100_predictions_genres = top100_predictions_genres.sort_values(by = 'adjusted_rating', ascending = False)
 

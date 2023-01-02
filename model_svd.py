@@ -29,6 +29,7 @@ def get_train_test_set(input_ratings_df, new_user_id,ratings, movies):
     testset['userId'] = new_user_id
     testset['rating'] = np.nan
     
+    # Remove the already rated movies
     testset = testset[~testset['movieId'].isin(list(input_ratings_df['movieId']))]
     testset = testset[['userId', 'movieId', 'rating']]
     
@@ -54,6 +55,7 @@ def get_predictions(model, testset, ratings):
 
     num_ratings = num_ratings.rename(columns = {"rating": "num_ratings"})
 
+    # Merge the num ratings onto the predictions
     predicted_ratings = predictions.merge(num_ratings, left_on ='movieId', right_index = True)
 
     predicted_ratings = predicted_ratings.drop(columns = ['rating', 'was_impossible']).rename(
@@ -63,6 +65,7 @@ def get_predictions(model, testset, ratings):
 
 def get_movie_by_genre(predicted_ratings, genres, movies_genres, max_recommendations = 20):
     
+    # Merge the genres onto the predictions
     predictions_genres = predicted_ratings.merge(movies_genres, on = 'movieId')
     predictions_genres = predictions_genres.sort_values(by = ['genreId', 'adjusted_rating'], ascending=False)
 
