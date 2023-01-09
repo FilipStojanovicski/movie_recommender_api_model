@@ -4,15 +4,16 @@ import pandas as pd
 import numpy as np
 import model_knn, model_svd
 import math
+import os
 from flask import json
 from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
 
-db_username = 'filip'
-db_password = 'abc123'
-db_name = 'movie_recommender'
-db_url = '127.0.0.1'
+db_username = os.environ.get("DB_USER")
+db_password = os.environ.get("DB_PASSWORD")
+db_name = os.environ.get("DB_NAME")
+db_url = os.environ.get("DB_HOST")
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://{db_username}:{db_password}@{db_url}/{db_name}'
 db = SQLAlchemy(app)
 
@@ -96,10 +97,6 @@ def recommendMoviesKNN():
         except Exception as e:
             print(e)
             return(jsonify({"status": 400, "data": None}))
-        
-  
-if __name__=='__main__':
-    app.run(debug=True)
 
 @app.route('/movie_recommendation/svd', methods = ['GET', 'POST'])
 def recommendMoviesSVD():
@@ -160,5 +157,7 @@ def recommendMoviesSVD():
             return(jsonify({"status": 400, "data": None}))
         
   
+  
 if __name__=='__main__':
-    app.run(debug=True)
+    print(os.environ.get("FLASK_DEBUG"))
+    app.run(debug=os.environ.get("FLASK_DEBUG"))
